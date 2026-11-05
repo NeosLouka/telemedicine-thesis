@@ -1,0 +1,16 @@
+
+CREATE TABLE admins (
+    id BIGSERIAL PRIMARY KEY,
+
+    account_id BIGINT NOT NULL UNIQUE,
+
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(30),
+    department VARCHAR(100),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+

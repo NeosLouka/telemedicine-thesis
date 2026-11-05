@@ -1,0 +1,86 @@
+services:
+  database:
+    image: postgres:latest
+    container_name: telemedicine-postgres
+    restart: unless-stopped
+    env_file:
+      - .dev.env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - telemedicine_postgres_data:/var/lib/postgresql
+    networks:
+      - telemedicine-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: telemedicine-pgadmin
+    restart: unless-stopped
+    env_file:
+      - .dev.env
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - database
+    networks:
+      - telemedicine-network
+
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: telemedicine-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - telemedicine-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: telemedicine-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - telemedicine-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: telemedicine-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Default login credentials
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - telemedicine-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: telemedicine-mailpit
+    ports:
+      - "8025:8025" # Web UI & SES API Endpoint
+      - "1025:1025" # Standard SMTP
+    restart: unless-stopped
+
+
+networks:
+  telemedicine-network:
+    driver: bridge
+
+volumes:
+  telemedicine_postgres_data:
+    driver: local
+  grafana-storage:
+    driver: local
